@@ -446,7 +446,8 @@ export async function getPopularGames(): Promise<GameBasic[]> {
         region: 'tr',
         country: 'TR',
         shops: 'steam,epic,gog,humblestore,origin',
-        limit: 5
+        limit: 5,
+        sort: 'popularity'
       }
     });
     
@@ -461,7 +462,8 @@ export async function getPopularGames(): Promise<GameBasic[]> {
         discountPercent: game.price_cut || 0,
         originalPrice: game.price_old || 0,
         currentPrice: game.price_new || 0,
-        discountPlatform: game.shop?.name || null
+        discountPlatform: game.shop?.name || null,
+        discountEndDate: game.expiry ? new Date(game.expiry * 1000).toISOString() : null
       }));
     }
     
