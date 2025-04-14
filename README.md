@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Oyun İndirimleri
 
 IsThereAnyDeal API kullanılarak geliştirilen bu web sitesi, en iyi oyun indirimlerini bulmanızı ve farklı mağazalardaki fiyatları karşılaştırmanızı sağlar.
@@ -45,3 +46,7 @@ Bu proje [IsThereAnyDeal API](https://isthereanydeal.com)'sini kullanmaktadır. 
 ## Lisans
 
 MIT 
+=======
+# gamez
+game api
+>>>>>>> 6e42ca2adb9c094d47393e79ae8a64dd7a97ef8b
