@@ -124,33 +124,51 @@ export async function getGameInfo(gameId: string): Promise<GameInfo | null> {
 
 export async function getGamePrices(gameId: string): Promise<GamePrice[]> {
   try {
-    const response = await itadApi.get("game/prices", {
+    const response = await itadApi.post("games/prices/v3", [gameId], {
+      headers: {
+        'Content-Type': 'application/json'
+      },
       params: {
-        plains: gameId,
-        vouchers: 1
+        region: 'tr',
+        country: 'TR',
+        shops: 'steam,epic,gog,humblestore,origin'
       }
     });
     
-    if (response.data?.data?.[gameId]?.list) {
-      return response.data.data[gameId].list.map((deal: any) => ({
+    if (response.data?.[0]?.deals) {
+      return response.data[0].deals.map((deal: any) => ({
         shop: {
           id: deal.shop.id,
           name: deal.shop.name
         },
         price: {
-          amount: deal.price_new,
-          amountInt: Math.round(deal.price_new * 100),
-          currency: deal.currency
+          amount: deal.price.amount,
+          amountInt: deal.price.amountInt,
+          currency: deal.price.currency
         },
         regular: {
-          amount: deal.price_old,
-          amountInt: Math.round(deal.price_old * 100),
-          currency: deal.currency
+          amount: deal.regular.amount,
+          amountInt: deal.regular.amountInt,
+          currency: deal.regular.currency
         },
-        cut: deal.price_cut,
-        url: deal.url,
+        cut: deal.cut,
+        voucher: deal.voucher,
+        storeLow: deal.storeLow ? {
+          amount: deal.storeLow.amount,
+          amountInt: deal.storeLow.amountInt,
+          currency: deal.storeLow.currency
+        } : null,
+        historyLow: response.data[0].historyLow ? {
+          all: response.data[0].historyLow.all,
+          y1: response.data[0].historyLow.y1,
+          m3: response.data[0].historyLow.m3
+        } : null,
+        flag: deal.flag,
         drm: deal.drm,
-        timestamp: new Date(deal.added * 1000).toISOString()
+        platforms: deal.platforms,
+        timestamp: deal.timestamp,
+        expiry: deal.expiry,
+        url: deal.url
       }));
     }
     
