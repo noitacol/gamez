@@ -2,8 +2,8 @@ import axios from "axios";
 import type { GameBasic, GameHistory, GameInfo, GamePrice, Shop, PlatformPrice } from "./types";
 
 // IsThereAnyDeal API için yapılandırma
-const ITAD_API_KEY = process.env.ITAD_API_KEY || '';
-const ITAD_API_BASE_URL = 'https://api.isthereanydeal.com/v01/';
+const ITAD_API_KEY = process.env.NEXT_PUBLIC_ITAD_API_KEY || '';
+const ITAD_API_BASE_URL = 'https://api.isthereanydeal.com/v02/';
 
 // Next.js API Routes üzerinden yerel API çağrıları
 const api = axios.create({
@@ -14,7 +14,10 @@ const api = axios.create({
 const itadApi = axios.create({
   baseURL: ITAD_API_BASE_URL,
   params: {
-    key: ITAD_API_KEY
+    key: ITAD_API_KEY,
+    region: 'tr',
+    country: 'TR',
+    shops: 'steam,epic,gog,humblestore,origin'
   }
 });
 
@@ -61,45 +64,31 @@ export async function getShops(): Promise<Shop[]> {
 
 export async function searchGames(query: string): Promise<GameBasic[]> {
   try {
-    // Önce Next.js API Routes üzerinden dene
-    const response = await api.get("/search", {
+    const response = await itadApi.get("search/search", {
       params: {
         q: query,
-      },
-    });
-    return response.data.value;
-  } catch (error) {
-    console.error("Error searching games from local API, trying ITAD API directly:", error);
-    
-    try {
-      // ITAD API'ye doğrudan istek
-      const itadResponse = await itadApi.get("search/search/", {
-        params: {
-          q: query,
-          limit: 20
-        }
-      });
-      
-      if (itadResponse.data && itadResponse.data.data && itadResponse.data.data.results) {
-        // ITAD API'den gelen veriyi GameBasic formatına dönüştür
-        return itadResponse.data.data.results.map((game: any) => ({
-          id: game.id || `game-${Math.random().toString(36).substr(2, 9)}`,
-          slug: game.slug || '',
-          title: game.title || 'Unknown Game',
-          type: game.type || null,
-          mature: game.mature || false,
-          image: game.image || `https://placehold.co/400x600?text=${encodeURIComponent(game.title || 'No Image')}`,
-        }));
+        limit: 20,
+        strict: 0
       }
-      
-      throw new Error("Invalid ITAD API response");
-    } catch (itadError) {
-      console.error("Error searching games from ITAD API, returning mock data:", itadError);
-      // Örnek veri döndür
-      return getExampleGames().filter(game => 
-        game.title.toLowerCase().includes(query.toLowerCase())
-      );
+    });
+    
+    if (response.data?.data?.results) {
+      return response.data.data.results.map((game: any) => ({
+        id: game.plain || `game-${Math.random().toString(36).substr(2, 9)}`,
+        slug: game.plain || '',
+        title: game.title || 'Unknown Game',
+        type: game.type || null,
+        mature: game.is_mature || false,
+        image: game.image || `https://placehold.co/400x600?text=${encodeURIComponent(game.title || 'No Image')}`,
+      }));
     }
+    
+    return [];
+  } catch (error) {
+    console.error("Error searching games:", error);
+    return getExampleGames().filter(game => 
+      game.title.toLowerCase().includes(query.toLowerCase())
+    );
   }
 }
 
@@ -111,17 +100,18 @@ export async function getGameInfo(gameId: string): Promise<GameInfo | null> {
       }
     });
     
-    if (response.data && response.data.data) {
+    if (response.data?.data?.[gameId]) {
       const data = response.data.data[gameId];
       return {
         id: gameId,
         title: data.title,
         type: data.type,
-        mature: data.mature,
+        mature: data.is_mature || false,
         image: data.image,
-        slug: data.slug,
+        slug: data.plain,
         developers: data.developers || [],
-        publishers: data.publishers || []
+        publishers: data.publishers || [],
+        urls: data.urls || {}
       };
     }
     
@@ -134,32 +124,33 @@ export async function getGameInfo(gameId: string): Promise<GameInfo | null> {
 
 export async function getGamePrices(gameId: string): Promise<GamePrice[]> {
   try {
-    const response = await itadApi.get("games/prices/v3", {
+    const response = await itadApi.get("game/prices", {
       params: {
-        country: "US",
-        shops: "steam,gog,epic,humblestore,origin",
-        deals: true
-      },
-      data: [gameId]
+        plains: gameId,
+        vouchers: 1
+      }
     });
     
-    if (response.data && response.data.data && response.data.data[gameId]) {
+    if (response.data?.data?.[gameId]?.list) {
       return response.data.data[gameId].list.map((deal: any) => ({
-        shop: deal.shop,
-        price: deal.price,
-        regular: deal.regular,
-        cut: deal.cut,
-        voucher: deal.voucher,
-        storeLow: deal.storeLow,
-        historyLow: deal.historyLow,
-        historyLow_1y: deal.historyLow_1y,
-        historyLow_3m: deal.historyLow_3m,
-        flag: deal.flag,
+        shop: {
+          id: deal.shop.id,
+          name: deal.shop.name
+        },
+        price: {
+          amount: deal.price_new,
+          amountInt: Math.round(deal.price_new * 100),
+          currency: deal.currency
+        },
+        regular: {
+          amount: deal.price_old,
+          amountInt: Math.round(deal.price_old * 100),
+          currency: deal.currency
+        },
+        cut: deal.price_cut,
+        url: deal.url,
         drm: deal.drm,
-        platforms: deal.platforms,
-        timestamp: deal.timestamp,
-        expiry: deal.expiry,
-        url: deal.url
+        timestamp: new Date(deal.added * 1000).toISOString()
       }));
     }
     
@@ -174,21 +165,33 @@ export async function getGameHistoricalLow(gameId: string): Promise<GameHistory 
   try {
     const response = await itadApi.get("game/lowest", {
       params: {
-        plains: gameId
+        plains: gameId,
+        since: 0
       }
     });
     
-    if (response.data && response.data.data && response.data.data[gameId]) {
+    if (response.data?.data?.[gameId]) {
       const data = response.data.data[gameId];
       return {
         id: gameId,
-        lows: data.lows.map((low: any) => ({
-          shop: low.shop,
-          price: low.price,
-          regular: low.regular,
-          cut: low.cut,
-          timestamp: low.timestamp
-        }))
+        lows: [{
+          shop: {
+            id: data.shop.id,
+            name: data.shop.name
+          },
+          price: {
+            amount: data.price,
+            amountInt: Math.round(data.price * 100),
+            currency: data.currency
+          },
+          regular: {
+            amount: data.regular,
+            amountInt: Math.round(data.regular * 100),
+            currency: data.currency
+          },
+          cut: data.cut,
+          timestamp: new Date(data.timestamp * 1000).toISOString()
+        }]
       };
     }
     

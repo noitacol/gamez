@@ -212,28 +212,31 @@ export default function GameDetail({ gameId }: GameDetailProps) {
       {/* Tarihi düşük fiyat */}
       <div>
         <h2 className="text-2xl font-bold text-white mb-4">Tarihi En Düşük Fiyat</h2>
-        {historicalLow ? (
+        {historicalLow && historicalLow.lows.length > 0 && (
           <div className="card p-6">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-medium text-white">{historicalLow.shop.name}</span>
-              {historicalLow.cut > 0 && (
+              <span className="text-lg font-medium text-white">{historicalLow.lows[0].shop.name}</span>
+              {historicalLow.lows[0].cut > 0 && (
                 <span className="bg-accent text-secondary px-2 py-1 rounded text-sm font-bold">
-                  -{historicalLow.cut}%
+                  -{historicalLow.lows[0].cut}%
                 </span>
               )}
             </div>
-            
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-2xl font-bold text-white">{historicalLow.price.amount} {historicalLow.price.currency}</span>
-              <span className="text-gray-400 line-through">{historicalLow.regular.amount} {historicalLow.regular.currency}</span>
-            </div>
-            
-            <div className="text-sm text-gray-400">
-              Tarihi: {new Date(historicalLow.timestamp).toLocaleDateString()}
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Fiyat:</span>
+                <span className="text-white">{historicalLow.lows[0].price.amount} {historicalLow.lows[0].price.currency}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Normal Fiyat:</span>
+                <span className="text-white line-through">{historicalLow.lows[0].regular.amount} {historicalLow.lows[0].regular.currency}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Tarih:</span>
+                <span className="text-white">{new Date(historicalLow.lows[0].timestamp).toLocaleDateString()}</span>
+              </div>
             </div>
           </div>
-        ) : (
-          <p className="text-gray-400">Tarihi en düşük fiyat bilgisi bulunamadı.</p>
         )}
       </div>
       
