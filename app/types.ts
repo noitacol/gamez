@@ -67,4 +67,11 @@ export interface GameInfo {
   slug: string;
   developers: string[];
   publishers: string[];
+  assets?: {
+    boxart: string;
+    banner145: string;
+    banner300: string;
+    banner400: string;
+    banner600: string;
+  };
 } 
