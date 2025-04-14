@@ -74,4 +74,6 @@ export interface GameInfo {
     banner400: string;
     banner600: string;
   };
+  releaseDate?: string;
+  earlyAccess?: boolean;
 } 
