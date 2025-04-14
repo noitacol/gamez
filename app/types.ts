@@ -48,69 +48,23 @@ export interface GamePrice {
 }
 
 export interface GameHistory {
-  shop: {
-    id: number;
-    name: string;
-  };
-  price: {
-    amount: number;
-    amountInt: number;
-    currency: string;
-  };
-  regular: {
-    amount: number;
-    amountInt: number;
-    currency: string;
-  };
-  cut: number;
-  timestamp: string;
+  id: string;
+  lows: {
+    shop: string;
+    price: number;
+    regular: number;
+    cut: number;
+    timestamp: string;
+  }[];
 }
 
 export interface GameInfo {
   id: string;
-  slug: string;
   title: string;
   type: string;
   mature: boolean;
-  assets: {
-    boxart: string;
-    banner145: string;
-    banner300: string;
-    banner400: string;
-    banner600: string;
-  };
-  earlyAccess: boolean;
-  achievements: boolean;
-  tradingCards: boolean;
-  appid: number;
-  tags: string[];
-  releaseDate: string;
-  developers: {
-    id: number;
-    name: string;
-  }[];
-  publishers: {
-    id: number;
-    name: string;
-  }[];
-  reviews: {
-    score: number;
-    source: string;
-    count: number;
-    url: string;
-  }[];
-  stats: {
-    rank: number;
-    waitlisted: number;
-    collected: number;
-  };
-  players?: {
-    recent: number;
-    day: number;
-    week: number;
-    peak: number;
-  };
-  urls: {
-    game: string;
-  };
+  image: string;
+  slug: string;
+  developers: string[];
+  publishers: string[];
 } 

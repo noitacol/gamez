@@ -2,7 +2,7 @@ import axios from "axios";
 import type { GameBasic, GameHistory, GameInfo, GamePrice, Shop, PlatformPrice } from "./types";
 
 // IsThereAnyDeal API için yapılandırma
-const ITAD_API_KEY = process.env.NEXT_PUBLIC_ITAD_API_KEY || '';
+const ITAD_API_KEY = process.env.ITAD_API_KEY || '';
 const ITAD_API_BASE_URL = 'https://api.isthereanydeal.com/v01/';
 
 // Next.js API Routes üzerinden yerel API çağrıları
@@ -105,12 +105,27 @@ export async function searchGames(query: string): Promise<GameBasic[]> {
 
 export async function getGameInfo(gameId: string): Promise<GameInfo | null> {
   try {
-    const response = await api.get("/game/info", {
+    const response = await itadApi.get("game/info", {
       params: {
-        id: gameId,
-      },
+        plains: gameId
+      }
     });
-    return response.data.value;
+    
+    if (response.data && response.data.data) {
+      const data = response.data.data[gameId];
+      return {
+        id: gameId,
+        title: data.title,
+        type: data.type,
+        mature: data.mature,
+        image: data.image,
+        slug: data.slug,
+        developers: data.developers || [],
+        publishers: data.publishers || []
+      };
+    }
+    
+    return null;
   } catch (error) {
     console.error("Error fetching game info:", error);
     return null;
@@ -119,15 +134,35 @@ export async function getGameInfo(gameId: string): Promise<GameInfo | null> {
 
 export async function getGamePrices(gameId: string): Promise<GamePrice[]> {
   try {
-    const response = await api.get("/game/prices", {
+    const response = await itadApi.get("games/prices/v3", {
       params: {
-        id: gameId,
+        country: "US",
+        shops: "steam,gog,epic,humblestore,origin",
+        deals: true
       },
+      data: [gameId]
     });
     
-    if (response.data.value && response.data.value.length > 0) {
-      return response.data.value[0].deals || [];
+    if (response.data && response.data.data && response.data.data[gameId]) {
+      return response.data.data[gameId].list.map((deal: any) => ({
+        shop: deal.shop,
+        price: deal.price,
+        regular: deal.regular,
+        cut: deal.cut,
+        voucher: deal.voucher,
+        storeLow: deal.storeLow,
+        historyLow: deal.historyLow,
+        historyLow_1y: deal.historyLow_1y,
+        historyLow_3m: deal.historyLow_3m,
+        flag: deal.flag,
+        drm: deal.drm,
+        platforms: deal.platforms,
+        timestamp: deal.timestamp,
+        expiry: deal.expiry,
+        url: deal.url
+      }));
     }
+    
     return [];
   } catch (error) {
     console.error("Error fetching game prices:", error);
@@ -137,15 +172,26 @@ export async function getGamePrices(gameId: string): Promise<GamePrice[]> {
 
 export async function getGameHistoricalLow(gameId: string): Promise<GameHistory | null> {
   try {
-    const response = await api.get("/game/historical-low", {
+    const response = await itadApi.get("game/lowest", {
       params: {
-        id: gameId,
-      },
+        plains: gameId
+      }
     });
     
-    if (response.data.value && response.data.value.length > 0 && response.data.value[0].lows.length > 0) {
-      return response.data.value[0].lows[0];
+    if (response.data && response.data.data && response.data.data[gameId]) {
+      const data = response.data.data[gameId];
+      return {
+        id: gameId,
+        lows: data.lows.map((low: any) => ({
+          shop: low.shop,
+          price: low.price,
+          regular: low.regular,
+          cut: low.cut,
+          timestamp: low.timestamp
+        }))
+      };
     }
+    
     return null;
   } catch (error) {
     console.error("Error fetching game historical low:", error);
@@ -392,27 +438,29 @@ const getGameWithPlatforms = (
 // Popüler oyunları getir
 export async function getPopularGames(): Promise<GameBasic[]> {
   try {
-    const response = await itadApi.get("game/popular", {
+    const response = await itadApi.get("games/prices/v3", {
       params: {
-        key: ITAD_API_KEY
-      }
+        country: "US",
+        shops: "steam,gog,epic,humblestore,origin",
+        deals: true
+      },
+      data: ["cyberpunk-2077", "the-witcher-3", "elden-ring", "starfield", "diablo-iv"]
     });
     
     if (response.data && response.data.data) {
       const games = await Promise.all(
-        response.data.data.map(async (game: any) => {
-          const prices = await getItadPrices(game.id);
-          const bestPrice = prices[0];
+        Object.entries(response.data.data).map(async ([id, data]: [string, any]) => {
+          const bestPrice = data.list[0];
           
           return {
-            id: game.id,
-            title: game.title,
-            type: game.type,
-            mature: game.mature,
-            image: game.image,
-            slug: game.slug,
+            id,
+            title: data.title,
+            type: "game",
+            mature: false,
+            image: `https://cdn.cloudflare.steamstatic.com/steam/apps/${data.steam_appid}/header.jpg`,
+            slug: id,
             discountPercent: bestPrice?.cut || 0,
-            discountEndDate: bestPrice?.timestamp || null,
+            discountEndDate: bestPrice?.expiry || null,
             originalPrice: bestPrice?.regular.amount || 0,
             currentPrice: bestPrice?.price.amount || 0,
             discountPlatform: bestPrice?.shop.name || null
@@ -619,49 +667,6 @@ export async function getAnticipatedGames(): Promise<GameBasic[]> {
         new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString()
       )
     ];
-  }
-}
-
-// IsThereAnyDeal API'den fiyat bilgilerini getiren yardımcı fonksiyon
-async function getItadPrices(gameId: string): Promise<GamePrice[]> {
-  try {
-    // ITAD API'ye doğrudan istek
-    const itadResponse = await itadApi.get("game/prices", {
-      params: {
-        plains: gameId, // ITAD'de 'plain' olarak adlandırılan oyun kimliği
-        region: "us",   // Bölge
-        country: "US",  // Ülke
-        shops: "steam,gog,epic,humblestore,origin" // İstenilen mağazalar
-      }
-    });
-    
-    if (itadResponse.data && itadResponse.data.data && itadResponse.data.data[gameId]) {
-      const priceData = itadResponse.data.data[gameId];
-      // ITAD API'den gelen veriyi GamePrice formatına dönüştür
-      return priceData.list.map((price: any) => ({
-        shop: {
-          id: price.shop.id || 0,
-          name: price.shop.name || 'Unknown Shop'
-        },
-        price: {
-          amount: price.price_new || 0,
-          amountInt: Math.floor((price.price_new || 0) * 100),
-          currency: price.currency || 'USD'
-        },
-        regular: {
-          amount: price.price_old || 0,
-          amountInt: Math.floor((price.price_old || 0) * 100),
-          currency: price.currency || 'USD'
-        },
-        cut: price.price_cut || 0,
-        timestamp: price.added || new Date().toISOString()
-      }));
-    }
-    
-    return [];
-  } catch (error) {
-    console.error("Error fetching prices from ITAD API:", error);
-    return [];
   }
 }
 
