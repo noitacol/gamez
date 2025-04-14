@@ -65,8 +65,14 @@ export interface GameInfo {
   mature: boolean;
   image: string;
   slug: string;
-  developers: string[];
-  publishers: string[];
+  developers: {
+    id: number;
+    name: string;
+  }[];
+  publishers: {
+    id: number;
+    name: string;
+  }[];
   assets?: {
     boxart: string;
     banner145: string;
