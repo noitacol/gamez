@@ -392,65 +392,37 @@ const getGameWithPlatforms = (
 // Popüler oyunları getir
 export async function getPopularGames(): Promise<GameBasic[]> {
   try {
-    // Bu API endpointi gerçek entegrasyonda oluşturulmalıdır
-    const response = await api.get("/games/popular");
-    return response.data.value || [];
+    // ITAD API'den popüler oyunları al
+    const response = await itadApi.get("game/popular");
+    
+    if (response.data && response.data.data) {
+      // Her oyun için detaylı bilgi al
+      const games = await Promise.all(
+        response.data.data.map(async (game: any) => {
+          const prices = await getItadPrices(game.id);
+          return {
+            id: game.id,
+            title: game.title,
+            type: game.type,
+            mature: game.mature,
+            image: game.image,
+            slug: game.slug,
+            discountPercent: prices[0]?.discount || 0,
+            discountEndDate: prices[0]?.expiry || null,
+            originalPrice: prices[0]?.price_old || 0,
+            currentPrice: prices[0]?.price_new || 0,
+            discountPlatform: prices[0]?.shop || null
+          };
+        })
+      );
+      
+      return games;
+    }
+    
+    throw new Error("Invalid ITAD API response");
   } catch (error) {
     console.error("Error fetching popular games:", error);
-    
-    // Hata durumunda örnek veri döndürme (gerçek implementasyonda kaldırılmalı)
-    return [
-      getGameWithPlatforms(
-        "018d937f-07fc-72ed-8517-d8e24cb1eb22", 
-        "Europa Universalis IV",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/236850/header.jpg",
-        "europa-universalis-iv",
-        "game",
-        false,
-        75,
-        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      ),
-      getGameWithPlatforms(
-        "01846e7e-7e96-71fb-bf16-6979fa211638", 
-        "Ghost Master",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/6200/header.jpg",
-        "ghost-master",
-        "game",
-        false,
-        90,
-        new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
-      ),
-      getGameWithPlatforms(
-        "01846e7e-84f8-7314-94eb-6bff48d886f8", 
-        "The Ship: Single Player",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/2400/header.jpg",
-        "the-ship-single-player",
-        "game",
-        false,
-        75,
-        new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
-      ),
-      getGameWithPlatforms(
-        "01849782-1017-7389-8de4-c97c587fd7e3", 
-        "The Witcher 3: Wild Hunt",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/292030/header.jpg",
-        "the-witcher-3-wild-hunt",
-        "game",
-        true,
-        70,
-        new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString()
-      ),
-      getGameWithPlatforms(
-        "01849783-6a26-7147-ab32-71804ca47e8e", 
-        "Cyberpunk 2077",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg",
-        "cyberpunk-2077",
-        "game",
-        true,
-        50,
-        new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
-      )
-    ];
+    return getExampleGames().slice(0, 5);
   }
 }
 
