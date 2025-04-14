@@ -44,15 +44,58 @@ export interface GamePrice {
     currency: string;
   };
   cut: number;
+  voucher: string | null;
+  storeLow: {
+    amount: number;
+    amountInt: number;
+    currency: string;
+  } | null;
+  historyLow: {
+    amount: number;
+    amountInt: number;
+    currency: string;
+  } | null;
+  historyLow_1y: {
+    amount: number;
+    amountInt: number;
+    currency: string;
+  } | null;
+  historyLow_3m: {
+    amount: number;
+    amountInt: number;
+    currency: string;
+  } | null;
+  flag: "H" | "N" | "S" | null;
+  drm: {
+    id: number;
+    name: string;
+  }[];
+  platforms: {
+    id: number;
+    name: string;
+  }[];
   timestamp: string;
+  expiry: string | null;
+  url: string;
 }
 
 export interface GameHistory {
   id: string;
   lows: {
-    shop: string;
-    price: number;
-    regular: number;
+    shop: {
+      id: number;
+      name: string;
+    };
+    price: {
+      amount: number;
+      amountInt: number;
+      currency: string;
+    };
+    regular: {
+      amount: number;
+      amountInt: number;
+      currency: string;
+    };
     cut: number;
     timestamp: string;
   }[];
