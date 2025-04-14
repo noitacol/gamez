@@ -1,0 +1,10 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: Game IDs Lookup by Title Response
+type: object
+additionalProperties:
+  x-additionalPropertiesName: title
+  oneOf:
+    - type: "null"
+    - type: string
+      format: uuid
+

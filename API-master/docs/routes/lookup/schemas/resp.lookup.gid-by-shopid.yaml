@@ -1,0 +1,10 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: Game IDs lookup by shop ID response
+type: object
+additionalProperties:
+  x-additionalPropertiesName: shop ID
+  oneOf:
+    - type: "null"
+    - type: string
+      format: uuid
+

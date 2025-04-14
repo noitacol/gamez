@@ -1,0 +1,39 @@
+post:
+  operationId: lookup-shopid-gid-v1
+  tags:
+    - Lookup
+  summary: Lookup game IDs on shop by ITAD game IDs
+  description: Lookup shop's game IDs by IsThereAnyDeal game IDs
+  security:
+    - {}
+    - keySecurity: []
+  parameters:
+    - name: shopId
+      in: path
+      required: true
+      schema:
+        type: number
+  requestBody:
+    description: List of game IDs
+    content:
+      "application/json":
+        schema:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            format: uuid
+  responses:
+    200:
+      description: Success response
+      content:
+        "application/json":
+          schema:
+            $ref: "./schemas/resp.lookup.shopid-by-gid.yaml"
+          examples:
+            success:
+              $ref: "./examples/resp.shopid-by-gid.post.v1.success.yaml"
+    400:
+      $ref: "../../defs/error-response.yaml"
+    default:
+      $ref: "../../defs/error-response.yaml"

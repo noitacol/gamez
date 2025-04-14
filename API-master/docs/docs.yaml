@@ -1,0 +1,380 @@
+openapi: 3.1.0
+info:
+  title: IsThereAnyDeal API
+  description: |
+    [Changelog](https://github.com/IsThereAnyDeal/API/blob/master/CHANGELOG.md)
+    
+    IsThereAnyDeal API provides programmatic access to features found at IsThereAnyDeal.  
+    
+    ## Terms of Service
+
+    API is provided in good faith. We trust you won't misuse the API to damage IsThereAnyDeal, its users or its reputation.
+
+    - You MAY use this API for commercial purposes **IF** the resulting app is available to public. If you want to use this API privately contact us.
+    - You SHOULD provide a link to IsThereAnyDeal.com or mention IsThereAnyDeal API.
+    - You MUST NOT make an impression that you are affiliated with IsThereAnyDeal, unless agreed otherwise.
+      If you are interested in making an official app, please contact us.
+    - You MUST NOT change provided data in any way. This means that you can't remove affiliate tags from the URLs, change prices and so on.
+      You MAY use only part of data provided and enrich them from your own sources.  
+    - You MUST NOT make an app that could be considered a competition to IsThereAnyDeal or IsThereAnyDeal projects.
+    - You MUST NOT use this API to directly or indirectly help the competition of IsThereAnyDeal.
+    
+    All data are provided _as-is_. We reserve the right to deny you access to the API at any point without notice.
+    If you are not sure about any of the points, please contact us.
+    
+    ## Access
+    
+    Most of the endpoints will be restricted by either API key or OAuth.
+    In order to get neccessary keys, you have to [register your app](https://isthereanydeal.com/apps/my/).
+    Upon registration, api keys and OAuth credentials will be generated for you.
+    
+    For some endpoints you might need explicit approval for use. In such cases, contact us.
+    
+    ### OAuth
+    
+    We support [authorization code](https://www.oauth.com/oauth2-servers/access-tokens/authorization-code-request/) flow with [PKCE extension](https://oauth.net/2/pkce/).
+    
+    > You can find PKCE step-through tutorial at [OAuth 2.0 PKCE Flow](https://www.oauth.com/playground/authorization-code-with-pkce.html)
+    
+    Do not set hard limits for token lengths. Server will return access token as JWT of variable length.
+    To authorize your endpoint access use Authorization header.
+    
+    > At the moment implicit flow is also enabled, but its usage is discouraged and support may be removed in the future
+    
+    ## Rate Limiting
+    
+    Access to API is rate limited and subject to change. You should get rate-limit info in appropriate headers.
+    Further limits and restrictions may be added if we detect misuse. 
+    
+    If you have questions about limits, contact us.
+    
+    # Unstable and Internal Endpoints
+    
+    Some endpoints are marked as unstable or internal. Unstable endpoints are publicly available,
+    but the API may not be completely finalized yet - either the way the endpoint is called or the response may change
+    at any time.
+    
+    Internal APIs are available only for our own services. They are documented here for the sake of completeness.
+    
+    ## Source
+
+    You can find source files for this documentation over at [GitHub](https://github.com/IsThereAnyDeal/API).
+    Feel free to help us improve it.
+
+  termsOfService: https://github.com/IsThereAnyDeal/API/blob/master/TERMS_OF_SERVICE.md
+  version: 2.7.0
+  contact:
+    name: General API contact
+    email: api@isthereanydeal.com
+servers:
+  - url: https://api.isthereanydeal.com
+
+tags:
+  - name: Lookup
+    description: |
+      Endpoints for looking up things on IsThereAnyDeal.
+      
+      Endpoints in `/lookup/` namespace will follow this URL structure: `/lookup/{lookup-what}/{by-what}/`
+      
+      Endpoints from other namespaces that are related to lookup in any way may also be
+      included in this category. 
+
+  - name: Game
+  - name: Prices
+  - name: History
+  - name: Bundles
+  - name: Deals List
+  - name: Subscriptions
+
+  - name: Waitlist Games
+    x-displayName: Games
+  - name: Waitlist Stats
+    x-displayName: Stats
+  - name: Waitlist Notifications
+    x-displayName: Notifications
+
+  - name: Collection Games
+    x-displayName: Games
+    description: |
+      Basic Collection operations when you only need to track games, without additional details.
+  - name: Collection Copies
+    x-displayName: Copies
+    description: |
+      Operations on Collection copies. These allow more detailed tracking of owned games.
+  - name: Collection Groups
+    x-displayName: Categories
+    description: |
+      Collection category endpoints. Category and group may be used interchangably. Default category has ID 0.
+  - name: Collection Stats
+    x-displayName: Stats
+
+  - name: User
+  - name: User Notes
+    x-displayName: Notes
+    description: Endpoints for managing notes, that user can create for individual games.
+
+  - name: Profiles
+    description: |
+      You can create a link between your app's users' accounts and ITAD, and use that link to sync
+      games into Waitlist and Collection in the similar fashion as natively supported profiles on IsThereAnyDeal.
+
+  - name: Sync
+    description: |
+      Sync endpoints provide easier way to add or remove games from Waitlist and Collection.
+      
+      Sync via API works in the same way as natively supported sync of remote profiles, but instead of ITAD pulling data,
+      you will have to push data. Behavior of sync'd games is the same as for natively supported profiles.
+      
+      It is useful when you can create a list of all games for user, and don't want to handle game identification,
+      deduplication, additions and removals via regular API endpoints.
+
+  - name: Notifications
+  - name: Shops
+  - name: Stats
+
+  - name: Unstable
+    description: |
+      Endpoints that are not yet stable. They may be in development, experimental,
+      or we are not sure about their current definition.
+
+  - name: Internal
+    description: |
+      Endpoints available for our own services. They are documented here for the sake of completeness.
+
+  - name: Webhooks
+    description: |
+      Webhooks provide a simpler wait to get data from IsThereAnyDeal, if you don't required full API access.
+      
+      User can [register a webhook in their settings](https://isthereanydeal.com/settings/webhooks/)
+      and choose which events they wish to listen to. Once the event is triggered on IsThereAnyDeal,
+      a request will be sent to registered webhook.
+      
+      Each request will include `ITAD-Hook-ID` header with a unique ID of a registered webhook
+      and `ITAD-Event-ID` headers which identify the event.
+
+x-tagGroups:
+  - name: Webhooks
+    tags:
+      - Webhooks
+  - name: Lookup
+    tags:
+     - Lookup
+  - name: Games
+    tags:
+      - Game
+      - Prices
+      - History
+      - Bundles
+      - Deals List
+      - Subscriptions
+  - name: Waitlist
+    tags:
+      - Waitlist Games
+      - Waitlist Stats
+      - Waitlist Notifications
+  - name: Collection
+    tags:
+      - Collection Games
+      - Collection Copies
+      - Collection Groups
+      - Collection Stats
+  - name: Stats
+    tags:
+      - Stats
+  - name: User
+    tags:
+      - User
+      - User Notes
+      - Profiles
+      - Sync
+  - name: Notifications
+    tags:
+      - Notifications
+  - name: Shops
+    tags:
+      - Shops
+  - name: Unstable
+    tags:
+      - Unstable
+  - name: Internal
+    tags:
+      - Internal
+
+components:
+  securitySchemes:
+    keySecurity:
+      type: apiKey
+      in: query
+      name: key
+
+    oauthSecurity:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://isthereanydeal.com/oauth/authorize/
+          tokenUrl: https://isthereanydeal.com/oauth/token/
+          refreshUrl: https://isthereanydeal.com/oauth/token/
+          scopes:
+            user_info: Get basic user's info
+            notes_read: Read user's game notes
+            notes_write: Write (add, edit, delete) user's game notes
+            profiles: Link or unlink profiles
+            wait_read: Read user's Waitlist
+            wait_write: Write (add, edit, delete) in user's Waitlist
+            coll_read: Read user's Collection
+            coll_write: Write (add, edit, delete) in user's Collection
+
+  parameters:
+    country:
+      name: country
+      in: query
+      description: Two letter country code (ISO 3166-1 alpha-2)
+      schema:
+        type: string
+        minLength: 2
+        maxLength: 2
+        default: "US"
+    gid:
+      name: id
+      in: query
+      required: true
+      description: Game ID
+      schema:
+        type: string
+        format: uuid
+    shops:
+      name: shops
+      in: query
+      description: List of shop IDs
+      explode: false
+      style: form
+      schema:
+        type: array
+        items:
+          type: integer
+        example: [ 65, 35 ]
+
+  requestBodies:
+    gids:
+      description: List of Game IDs
+      content:
+        "application/json":
+          schema:
+            type: array
+            minItems: 1
+            items:
+              type: string
+              format: uuid
+          example: [ "01849783-6a26-7147-ab32-71804ca47e8e", "01849782-1017-7389-8de4-c97c587fd7e3" ]
+
+    gids-200:
+      description: List of Game IDs
+      content:
+        "application/json":
+          schema:
+            type: array
+            minItems: 1
+            maxItems: 200
+            items:
+              type: string
+              format: uuid
+          example: [ "01849783-6a26-7147-ab32-71804ca47e8e", "01849782-1017-7389-8de4-c97c587fd7e3" ]
+
+paths:
+  /lookup/id/title/v1:
+    $ref: "./routes/lookup/gid-by-title.v1.yaml"
+  /lookup/id/shop/{shopId}/v1:
+    $ref: "./routes/lookup/gid-by-shopid.v1.yaml"
+  /lookup/shop/{shopId}/id/v1:
+    $ref: "./routes/lookup/shopid-by-gid.v1.yaml"
+
+  /games/search/v1:
+    $ref: "./routes/games/search.v1.yaml"
+  /games/lookup/v1:
+    $ref: "./routes/games/lookup.v1.yaml"
+  /games/info/v2:
+    $ref: "./routes/games/info.v2.yaml"
+  /games/prices/v3:
+    $ref: "./routes/games/prices.v3.yaml"
+  /games/bundles/v2:
+    $ref: "./routes/games/bundles.v2.yaml"
+  /games/overview/v2:
+    $ref: "./routes/games/overview.v2.yaml"
+  /games/historylow/v1:
+    $ref: "./routes/games/historylow.v1.yaml"
+  /games/storelow/v2:
+    $ref: "./routes/games/storelow.v2.yaml"
+  /games/history/v2:
+    $ref: "./routes/games/history.v2.yaml"
+  /games/subs/v1:
+    $ref: "./routes/games/subscriptions.v1.yaml"
+
+  /deals/v2:
+    $ref: "./routes/deals/deals.v2.yaml"
+
+  /waitlist/games/v1:
+    $ref: "./routes/waitlist/games.v1.yaml"
+
+  /collection/games/v1:
+    $ref: "./routes/collection/games.v1.yaml"
+  /collection/copies/v1:
+    $ref: "./routes/collection/copies.v1.yaml"
+  /collection/groups/v1:
+    $ref: "./routes/collection/groups.v1.yaml"
+
+  /stats/waitlist/v1:
+    $ref: "./routes/stats/waitlist.v1.yaml"
+  /stats/most-waitlisted/v1:
+    $ref: "./routes/stats/most-waitlisted.v1.yaml"
+  /stats/most-collected/v1:
+    $ref: "./routes/stats/most-collected.v1.yaml"
+  /stats/most-popular/v1:
+    $ref: "./routes/stats/most-popular.v1.yaml"
+
+  /user/info/v2:
+    $ref: "./routes/user/info.v2.yaml"
+  /user/notes/v1:
+    $ref: "./routes/user/notes.v1.yaml"
+
+  /profiles/link/v1:
+    $ref: "./routes/profiles/link.v1.yaml"
+  /profiles/sync/waitlist/v1:
+    $ref: "./routes/profiles/sync.waitlist.v1.yaml"
+  /profiles/sync/collection/v1:
+    $ref: "./routes/profiles/sync.collection.v1.yaml"
+
+  /notifications/v1:
+    $ref: "./routes/notifications/list.v1.yaml"
+  /notifications/waitlist/v1:
+    $ref: "./routes/notifications/waitlist.v1.yaml"
+  /notifications/read/v1:
+    $ref: "./routes/notifications/read.v1.yaml"
+  /notifications/read/all/v1:
+    $ref: "./routes/notifications/read-all.v1.yaml"
+
+  /service/shops/v1:
+    $ref: "./routes/service/shops.v1.yaml"
+
+  /internal/early-access/v1:
+    $ref: "./routes/internal/early-access.v1.yaml"
+  /internal/players/v1:
+    $ref: "./routes/internal/players.v1.yaml"
+  /internal/hltb/v1:
+    $ref: "./routes/internal/hltb.v1.yaml"
+  /internal/reviews/v1:
+    $ref: "./routes/internal/reviews.v1.yaml"
+  /internal/rates/v1:
+    $ref: "./routes/internal/rates.v1.yaml"
+  /internal/exfgls/v1:
+    $ref: "./routes/internal/exfgls.v1.yaml"
+  /internal/twitch/stream/v1:
+    $ref: "./routes/internal/twitch.stream.v1.yaml"
+
+webhooks:
+  ping:
+    $ref: "./webhooks/ping.yaml"
+  notification:
+    $ref: "./webhooks/notification.yaml"
+
+
+

@@ -1,0 +1,94 @@
+{
+  "value": {
+    "id": "018d937f-07fc-72ed-8517-d8e24cb1eb22",
+    "slug": "europa-universalis-iv",
+    "title": "Europa Universalis IV",
+    "type": "game",
+    "mature": false,
+    "assets": {
+      "boxart": "https:\/\/dbxce1spal1df.cloudfront.net\/018d937f-07fc-72ed-8517-d8e24cb1eb22\/boxart.jpg",
+      "banner145": "https:\/\/dbxce1spal1df.cloudfront.net\/018d937f-07fc-72ed-8517-d8e24cb1eb22\/banner145.jpg",
+      "banner300": "https:\/\/dbxce1spal1df.cloudfront.net\/018d937f-07fc-72ed-8517-d8e24cb1eb22\/banner300.jpg",
+      "banner400": "https:\/\/dbxce1spal1df.cloudfront.net\/018d937f-07fc-72ed-8517-d8e24cb1eb22\/banner400.jpg",
+      "banner600": "https:\/\/dbxce1spal1df.cloudfront.net\/018d937f-07fc-72ed-8517-d8e24cb1eb22\/banner600.jpg"
+    },
+    "earlyAccess": false,
+    "achievements": true,
+    "tradingCards": true,
+    "appid": 236850,
+    "tags": [
+      "Grand Strategy",
+      "Strategy",
+      "Historical",
+      "Simulation",
+      "4X"
+    ],
+    "releaseDate": "2013-08-13",
+    "developers": [
+      {
+        "id": 434,
+        "name": "Paradox Development Studio"
+      },
+      {
+        "id": 8188,
+        "name": "Paradox"
+      },
+      {
+        "id": 8765,
+        "name": "Paradox Development Studio \/ Paradox Tinto"
+      },
+      {
+        "id": 514,
+        "name": "Paradox Tinto"
+      }
+    ],
+    "publishers": [
+      {
+        "id": 84,
+        "name": "Paradox Interactive"
+      },
+      {
+        "id": 16,
+        "name": "Paradox Interactive AB"
+      },
+      {
+        "id": 8188,
+        "name": "Paradox"
+      }
+    ],
+    "reviews": [
+      {
+        "score": 86,
+        "source": "Steam",
+        "count": 84184,
+        "url": "https:\/\/store.steampowered.com\/app\/236850\/"
+      },
+      {
+        "score": 87,
+        "source": "Metascore",
+        "count": 31,
+        "url": "https:\/\/metacritic.com\/game\/europa-universalis-iv\/critic-reviews\/?platform=pc"
+      },
+      {
+        "score": 87,
+        "source": "Metacritic User Score",
+        "count": 1399,
+        "url": "https:\/\/metacritic.com\/game\/europa-universalis-iv\/user-reviews\/?platform=pc"
+      }
+    ],
+    "stats": {
+      "rank": 529,
+      "waitlisted": 3368,
+      "collected": 18718
+    },
+    "players": {
+      "recent": 16763,
+      "day": 16967,
+      "week": 22451,
+      "peak": 46940
+    },
+    "urls": {
+      "game": "https:\/\/isthereanydeal.com\/game\/europa-universalis-iv\/"
+    }
+  }
+}
