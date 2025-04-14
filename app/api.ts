@@ -516,13 +516,15 @@ export async function getPopularGames(): Promise<GameBasic[]> {
 // En büyük indirime sahip oyunları getir
 export async function getMostDiscountedGames(): Promise<GameBasic[]> {
   try {
-    const response = await itadApi.get("games/overview/v2", {
-      params: {
-        region: 'tr',
-        country: 'TR',
-        shops: 'steam,epic,gog,humblestore,origin',
-        limit: 5,
-        sort: 'discount'
+    const response = await itadApi.post("games/overview/v2", {
+      region: 'tr',
+      country: 'TR',
+      shops: 'steam,epic,gog,humblestore,origin',
+      limit: 5,
+      sort: 'discount'
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
       }
     });
     
