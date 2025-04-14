@@ -400,6 +400,8 @@ export async function getPopularGames(): Promise<GameBasic[]> {
       const games = await Promise.all(
         response.data.data.map(async (game: any) => {
           const prices = await getItadPrices(game.id);
+          const bestPrice = prices[0];
+          
           return {
             id: game.id,
             title: game.title,
@@ -407,11 +409,11 @@ export async function getPopularGames(): Promise<GameBasic[]> {
             mature: game.mature,
             image: game.image,
             slug: game.slug,
-            discountPercent: prices[0]?.discount || 0,
-            discountEndDate: prices[0]?.expiry || null,
-            originalPrice: prices[0]?.price_old || 0,
-            currentPrice: prices[0]?.price_new || 0,
-            discountPlatform: prices[0]?.shop || null
+            discountPercent: bestPrice?.cut || 0,
+            discountEndDate: bestPrice?.timestamp || null,
+            originalPrice: bestPrice?.regular.amount || 0,
+            currentPrice: bestPrice?.price.amount || 0,
+            discountPlatform: bestPrice?.shop.name || null
           };
         })
       );
