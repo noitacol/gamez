@@ -459,30 +459,51 @@ const getGameWithPlatforms = (
 // Popüler oyunları getir
 export async function getPopularGames(): Promise<GameBasic[]> {
   try {
-    const response = await itadApi.get("games/overview/v2", {
-      params: {
-        region: 'tr',
-        country: 'TR',
-        shops: 'steam,epic,gog,humblestore,origin',
-        limit: 5,
-        sort: 'popularity'
-      }
-    });
+    const response = await itadApi.get("stats/most-popular/v1");
     
-    if (response.data?.data?.list) {
-      return response.data.data.list.map((game: any) => ({
-        id: game.plain || `game-${Math.random().toString(36).substr(2, 9)}`,
-        slug: game.plain || '',
-        title: game.title || 'Unknown Game',
-        type: game.type || null,
-        mature: game.is_mature || false,
-        image: game.image || `https://placehold.co/400x600?text=${encodeURIComponent(game.title || 'No Image')}`,
-        discountPercent: game.price_cut || 0,
-        originalPrice: game.price_old || 0,
-        currentPrice: game.price_new || 0,
-        discountPlatform: game.shop?.name || null,
-        discountEndDate: game.expiry ? new Date(game.expiry * 1000).toISOString() : null
-      }));
+    if (response.data) {
+      const games = response.data;
+      const gameIds = games.map((game: any) => game.id);
+      
+      // Fiyat bilgilerini çek
+      const pricesResponse = await itadApi.post("games/prices/v3", gameIds, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      // Tarihsel düşük fiyatları çek
+      const historyResponse = await itadApi.post("games/historylow/v1", gameIds, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      return games.map((game: any) => {
+        const priceData = pricesResponse.data?.find((p: any) => p.id === game.id);
+        const historyData = historyResponse.data?.find((h: any) => h.id === game.id);
+        
+        return {
+          id: game.id,
+          slug: game.slug,
+          title: game.title,
+          type: game.type,
+          mature: game.mature,
+          image: `https://cdn.cloudflare.steamstatic.com/steam/apps/${game.id}/header.jpg`,
+          discountPercent: priceData?.deals?.[0]?.cut || 0,
+          originalPrice: priceData?.deals?.[0]?.regular?.amount || 0,
+          currentPrice: priceData?.deals?.[0]?.price?.amount || 0,
+          discountPlatform: priceData?.deals?.[0]?.shop?.name || null,
+          discountEndDate: priceData?.deals?.[0]?.expiry || null,
+          historicalLow: historyData?.low ? {
+            price: historyData.low.price.amount,
+            regular: historyData.low.regular.amount,
+            cut: historyData.low.cut,
+            shop: historyData.low.shop.name,
+            timestamp: historyData.low.timestamp
+          } : null
+        };
+      });
     }
     
     return [];
@@ -495,127 +516,130 @@ export async function getPopularGames(): Promise<GameBasic[]> {
 // En büyük indirime sahip oyunları getir
 export async function getMostDiscountedGames(): Promise<GameBasic[]> {
   try {
-    // Bu API endpointi gerçek entegrasyonda oluşturulmalıdır
-    const response = await api.get("/games/discounted");
-    return response.data.value || [];
+    const response = await itadApi.get("games/overview/v2", {
+      params: {
+        region: 'tr',
+        country: 'TR',
+        shops: 'steam,epic,gog,humblestore,origin',
+        limit: 5,
+        sort: 'discount'
+      }
+    });
+    
+    if (response.data?.data?.list) {
+      const games = response.data.data.list;
+      const gameIds = games.map((game: any) => game.plain);
+      
+      // Fiyat bilgilerini çek
+      const pricesResponse = await itadApi.post("games/prices/v3", gameIds, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      // Tarihsel düşük fiyatları çek
+      const historyResponse = await itadApi.post("games/historylow/v1", gameIds, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      return games.map((game: any) => {
+        const priceData = pricesResponse.data?.find((p: any) => p.id === game.plain);
+        const historyData = historyResponse.data?.find((h: any) => h.id === game.plain);
+        
+        return {
+          id: game.plain,
+          slug: game.plain,
+          title: game.title,
+          type: game.type,
+          mature: game.is_mature || false,
+          image: game.image,
+          discountPercent: priceData?.deals?.[0]?.cut || 0,
+          originalPrice: priceData?.deals?.[0]?.regular?.amount || 0,
+          currentPrice: priceData?.deals?.[0]?.price?.amount || 0,
+          discountPlatform: priceData?.deals?.[0]?.shop?.name || null,
+          discountEndDate: priceData?.deals?.[0]?.expiry || null,
+          historicalLow: historyData?.low ? {
+            price: historyData.low.price.amount,
+            regular: historyData.low.regular.amount,
+            cut: historyData.low.cut,
+            shop: historyData.low.shop.name,
+            timestamp: historyData.low.timestamp
+          } : null
+        };
+      });
+    }
+    
+    return [];
   } catch (error) {
     console.error("Error fetching most discounted games:", error);
-    
-    // Hata durumunda örnek veri döndürme (gerçek implementasyonda kaldırılmalı)
-    return [
-      getGameWithPlatforms(
-        "01846e7e-7e96-71fb-bf16-6979fa211634", 
-        "Ghost Master",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/6200/header.jpg",
-        "ghost-master",
-        "game",
-        false,
-        90,
-        new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
-      ),
-      getGameWithPlatforms(
-        "018d937f-07fc-72ed-8517-d8e24cb1eb29", 
-        "Europa Universalis IV",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/236850/header.jpg",
-        "europa-universalis-iv",
-        "game",
-        false,
-        80,
-        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      ),
-      getGameWithPlatforms(
-        "01846e7e-84f8-7314-94eb-6bff48d886f5", 
-        "The Ship: Single Player",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/2400/header.jpg",
-        "the-ship-single-player",
-        "game",
-        false,
-        75,
-        new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
-      ),
-      getGameWithPlatforms(
-        "01849782-1017-7389-8de4-c97c587fd7e9", 
-        "The Witcher 3: Wild Hunt",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/292030/header.jpg",
-        "the-witcher-3-wild-hunt",
-        "game",
-        true,
-        70,
-        new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString()
-      ),
-      getGameWithPlatforms(
-        "01849783-6a26-7147-ab32-71804ca47e83", 
-        "Cyberpunk 2077",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg",
-        "cyberpunk-2077",
-        "game",
-        true,
-        50,
-        new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
-      )
-    ];
+    return getExampleGames().slice(0, 5);
   }
 }
 
 // Yakında bitecek sınırlı süreli indirimleri getir
 export async function getLimitedTimeDeals(): Promise<GameBasic[]> {
   try {
-    // Bu API endpointi gerçek entegrasyonda oluşturulmalıdır
-    const response = await api.get("/games/limited-time");
-    if (response.data.value && response.data.value.length > 0) {
-      // Gerçek verilere fiyat bilgisi ekle
-      const enrichedGames = await Promise.all(
-        response.data.value.map(async (game: GameBasic) => await enrichGameWithPrices(game))
-      );
-      return enrichedGames;
+    const response = await itadApi.get("games/overview/v2", {
+      params: {
+        region: 'tr',
+        country: 'TR',
+        shops: 'steam,epic,gog,humblestore,origin',
+        limit: 5,
+        sort: 'expiry'
+      }
+    });
+    
+    if (response.data?.data?.list) {
+      const games = response.data.data.list;
+      const gameIds = games.map((game: any) => game.plain);
+      
+      // Fiyat bilgilerini çek
+      const pricesResponse = await itadApi.post("games/prices/v3", gameIds, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      // Tarihsel düşük fiyatları çek
+      const historyResponse = await itadApi.post("games/historylow/v1", gameIds, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      return games.map((game: any) => {
+        const priceData = pricesResponse.data?.find((p: any) => p.id === game.plain);
+        const historyData = historyResponse.data?.find((h: any) => h.id === game.plain);
+        
+        return {
+          id: game.plain,
+          slug: game.plain,
+          title: game.title,
+          type: game.type,
+          mature: game.is_mature || false,
+          image: game.image,
+          discountPercent: priceData?.deals?.[0]?.cut || 0,
+          originalPrice: priceData?.deals?.[0]?.regular?.amount || 0,
+          currentPrice: priceData?.deals?.[0]?.price?.amount || 0,
+          discountPlatform: priceData?.deals?.[0]?.shop?.name || null,
+          discountEndDate: priceData?.deals?.[0]?.expiry || null,
+          historicalLow: historyData?.low ? {
+            price: historyData.low.price.amount,
+            regular: historyData.low.regular.amount,
+            cut: historyData.low.cut,
+            shop: historyData.low.shop.name,
+            timestamp: historyData.low.timestamp
+          } : null
+        };
+      });
     }
+    
     return [];
   } catch (error) {
     console.error("Error fetching limited time deals:", error);
-    
-    // Hata durumunda gerçekçi örnek fiyatlar ile örnek veri döndürme
-    return [
-      getGameWithPlatforms(
-        "01846e7e-7e96-71fb-bf16-6979fa211633", 
-        "Ghost Master",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/6200/header.jpg",
-        "ghost-master",
-        "game",
-        false,
-        90,
-        new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString()
-      ),
-      getGameWithPlatforms(
-        "018d937f-07fc-72ed-8517-d8e24cb1eb25", 
-        "Europa Universalis IV",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/236850/header.jpg",
-        "europa-universalis-iv",
-        "game",
-        false,
-        80,
-        new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString()
-      ),
-      getGameWithPlatforms(
-        "01849782-1017-7389-8de4-c97c587fd7e5", 
-        "The Witcher 3: Wild Hunt",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/292030/header.jpg",
-        "the-witcher-3-wild-hunt",
-        "game",
-        true,
-        70,
-        new Date(Date.now() + 16 * 60 * 60 * 1000).toISOString()
-      ),
-      getGameWithPlatforms(
-        "01849783-6a26-7147-ab32-71804ca47e85", 
-        "Cyberpunk 2077",
-        "https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg",
-        "cyberpunk-2077",
-        "game",
-        true,
-        50,
-        new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      )
-    ];
+    return getExampleGames().slice(0, 5);
   }
 }
 
