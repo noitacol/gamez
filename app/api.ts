@@ -392,15 +392,13 @@ const getGameWithPlatforms = (
 // Popüler oyunları getir
 export async function getPopularGames(): Promise<GameBasic[]> {
   try {
-    // ITAD API'den popüler oyunları al
     const response = await itadApi.get("game/popular", {
       params: {
-        key: process.env.NEXT_PUBLIC_ITAD_API_KEY
+        key: ITAD_API_KEY
       }
     });
     
     if (response.data && response.data.data) {
-      // Her oyun için detaylı bilgi al
       const games = await Promise.all(
         response.data.data.map(async (game: any) => {
           const prices = await getItadPrices(game.id);
