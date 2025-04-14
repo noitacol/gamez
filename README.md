@@ -48,5 +48,3 @@ Bu proje [IsThereAnyDeal API](https://isthereanydeal.com)'sini kullanmaktadır. 
 MIT 
 =======
 # gamez
-game api
->>>>>>> 6e42ca2adb9c094d47393e79ae8a64dd7a97ef8b
