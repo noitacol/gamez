@@ -76,4 +76,28 @@ export interface GameInfo {
   };
   releaseDate?: string;
   earlyAccess?: boolean;
+  achievements?: boolean;
+  tradingCards?: boolean;
+  appid?: number;
+  tags?: string[];
+  reviews?: {
+    score: number | null;
+    source: string;
+    count: number | null;
+    url: string;
+  }[];
+  stats?: {
+    rank: number;
+    waitlisted: number;
+    collected: number;
+  };
+  players?: {
+    recent: number;
+    day: number;
+    week: number;
+    peak: number;
+  };
+  urls?: {
+    game: string;
+  };
 } 
