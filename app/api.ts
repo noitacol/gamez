@@ -441,40 +441,31 @@ const getGameWithPlatforms = (
 // Popüler oyunları getir
 export async function getPopularGames(): Promise<GameBasic[]> {
   try {
-    const response = await itadApi.get("games/prices/v3", {
+    const response = await itadApi.get("games/overview/v2", {
       params: {
-        country: "US",
-        shops: "steam,gog,epic,humblestore,origin",
-        deals: true
-      },
-      data: ["cyberpunk-2077", "the-witcher-3", "elden-ring", "starfield", "diablo-iv"]
+        region: 'tr',
+        country: 'TR',
+        shops: 'steam,epic,gog,humblestore,origin',
+        limit: 5
+      }
     });
     
-    if (response.data && response.data.data) {
-      const games = await Promise.all(
-        Object.entries(response.data.data).map(async ([id, data]: [string, any]) => {
-          const bestPrice = data.list[0];
-          
-          return {
-            id,
-            title: data.title,
-            type: "game",
-            mature: false,
-            image: `https://cdn.cloudflare.steamstatic.com/steam/apps/${data.steam_appid}/header.jpg`,
-            slug: id,
-            discountPercent: bestPrice?.cut || 0,
-            discountEndDate: bestPrice?.expiry || null,
-            originalPrice: bestPrice?.regular.amount || 0,
-            currentPrice: bestPrice?.price.amount || 0,
-            discountPlatform: bestPrice?.shop.name || null
-          };
-        })
-      );
-      
-      return games;
+    if (response.data?.data?.list) {
+      return response.data.data.list.map((game: any) => ({
+        id: game.plain || `game-${Math.random().toString(36).substr(2, 9)}`,
+        slug: game.plain || '',
+        title: game.title || 'Unknown Game',
+        type: game.type || null,
+        mature: game.is_mature || false,
+        image: game.image || `https://placehold.co/400x600?text=${encodeURIComponent(game.title || 'No Image')}`,
+        discountPercent: game.price_cut || 0,
+        originalPrice: game.price_old || 0,
+        currentPrice: game.price_new || 0,
+        discountPlatform: game.shop?.name || null
+      }));
     }
     
-    throw new Error("Invalid ITAD API response");
+    return [];
   } catch (error) {
     console.error("Error fetching popular games:", error);
     return getExampleGames().slice(0, 5);
